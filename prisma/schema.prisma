@@ -1,0 +1,616 @@
+// Prisma schema for AcadConnect - Academic Management Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== ENUMS ====================
+
+enum Role {
+  STUDENT
+  FACULTY
+  ACADEMIC_REP
+  ADMIN
+}
+
+enum QueryStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum QueryCategory {
+  COURSE_STRUCTURE
+  EXAM_DIFFICULTY
+  FACULTY_FEEDBACK
+  TIMETABLE_ISSUES
+  ACADEMIC_POLICY
+  OTHER
+}
+
+enum MaterialStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  RESOURCE_UPLOADED
+  QUERY_RESPONSE
+  TIMETABLE_UPDATE
+  FACULTY_ANNOUNCEMENT
+  GENERAL
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+// ==================== USER & AUTH ====================
+
+model User {
+  id              String    @id @default(cuid())
+  name            String?
+  email           String    @unique
+  emailVerified   DateTime?
+  image           String?
+  password        String?
+  role            Role      @default(STUDENT)
+  rollNumber      String?   @unique
+  branch          String?
+  year            Int?
+  semester        Int?
+  phone           String?
+  bio             String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  accounts        Account[]
+  sessions        Session[]
+  enrollments     Enrollment[]
+  uploadedMaterials StudyMaterial[]
+  uploadedPYQs    PYQ[]
+  queries         Query[]           @relation("QueryAuthor")
+  queryResponses  QueryResponse[]
+  announcements   Announcement[]
+  notifications   Notification[]
+  discussionPosts DiscussionPost[]
+  discussionComments DiscussionComment[]
+  feedbacks       CourseFeedback[]
+  studyGroupMemberships StudyGroupMember[]
+  createdStudyGroups StudyGroup[]
+  facultyProfile  FacultyProfile?
+  academicRecords AcademicRecord[]
+  materialDownloads MaterialDownload[]
+  groupMessages   GroupMessage[]
+
+  @@index([role])
+  @@index([branch, year])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ==================== FACULTY ====================
+
+model FacultyProfile {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  department      String
+  designation     String
+  specialization  String?
+  officeHours     String?
+  officeLocation  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courses         Course[] @relation("FacultyCourses")
+  facultyChannels FacultyChannel[]
+}
+
+// ==================== COURSES & ENROLLMENT ====================
+
+model Course {
+  id              String   @id @default(cuid())
+  code            String   @unique
+  name            String
+  description     String?
+  branch          String
+  semester        Int
+  credits         Int      @default(3)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  faculty         FacultyProfile[] @relation("FacultyCourses")
+  enrollments     Enrollment[]
+  studyMaterials  StudyMaterial[]
+  pyqs            PYQ[]
+  timetableEntries TimetableEntry[]
+  feedbacks       CourseFeedback[]
+  academicRecords AcademicRecord[]
+  facultyChannels FacultyChannel[]
+  studyGroups     StudyGroup[]
+
+  @@index([branch, semester])
+}
+
+model Enrollment {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  semester  Int
+  year      Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId, semester, year])
+}
+
+// ==================== STUDY MATERIALS ====================
+
+model StudyMaterial {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  type        String         // lecture_notes, tutorial, assignment, reference
+  tags        String[]
+  version     Int            @default(1)
+  status      MaterialStatus @default(PENDING)
+  downloads   Int            @default(0)
+  courseId    String
+  uploadedById String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  course      Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  uploadedBy  User           @relation(fields: [uploadedById], references: [id])
+  downloadRecords MaterialDownload[]
+
+  @@index([courseId, status])
+  @@index([type])
+}
+
+model PYQ {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  branch      String
+  semester    Int
+  year        Int            // Exam year
+  examType    String         // mid-sem, end-sem, quiz
+  status      MaterialStatus @default(PENDING)
+  downloads   Int            @default(0)
+  courseId    String
+  uploadedById String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  course      Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  uploadedBy  User           @relation(fields: [uploadedById], references: [id])
+  downloadRecords MaterialDownload[]
+
+  @@index([branch, semester, year])
+  @@index([courseId, status])
+}
+
+model MaterialDownload {
+  id            String   @id @default(cuid())
+  userId        String
+  materialId    String?
+  pyqId         String?
+  downloadedAt  DateTime @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  material      StudyMaterial? @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  pyq           PYQ?          @relation(fields: [pyqId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([downloadedAt])
+}
+
+// ==================== DISCUSSION GROUPS ====================
+
+model DiscussionGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  branch      String
+  year        Int
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  posts       DiscussionPost[]
+  announcements Announcement[]
+
+  @@unique([branch, year])
+  @@index([branch, year])
+}
+
+model DiscussionPost {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  isPinned    Boolean  @default(false)
+  groupId     String
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  group       DiscussionGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author      User            @relation(fields: [authorId], references: [id])
+  comments    DiscussionComment[]
+  attachments PostAttachment[]
+
+  @@index([groupId, createdAt])
+}
+
+model DiscussionComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  postId    String
+  authorId  String
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post      DiscussionPost     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User               @relation(fields: [authorId], references: [id])
+  parent    DiscussionComment? @relation("CommentReplies", fields: [parentId], references: [id])
+  replies   DiscussionComment[] @relation("CommentReplies")
+
+  @@index([postId, createdAt])
+}
+
+model PostAttachment {
+  id        String   @id @default(cuid())
+  fileName  String
+  fileUrl   String
+  fileType  String
+  fileSize  Int
+  postId    String
+  createdAt DateTime @default(now())
+
+  post      DiscussionPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+}
+
+// ==================== FACULTY CONNECT ====================
+
+model FacultyChannel {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  courseId    String
+  facultyId   String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course      Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  faculty     FacultyProfile  @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  messages    ChannelMessage[]
+
+  @@unique([courseId, facultyId])
+}
+
+model ChannelMessage {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  isAnnouncement Boolean @default(false)
+  channelId   String
+  authorId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  channel     FacultyChannel @relation(fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@index([channelId, createdAt])
+}
+
+// ==================== QUERY DESK ====================
+
+model Query {
+  id          String        @id @default(cuid())
+  ticketId    String        @unique @default(cuid())
+  title       String
+  description String        @db.Text
+  category    QueryCategory
+  status      QueryStatus   @default(PENDING)
+  priority    Int           @default(1) // 1-5
+  authorId    String
+  assignedToId String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  resolvedAt  DateTime?
+
+  author      User           @relation("QueryAuthor", fields: [authorId], references: [id])
+  responses   QueryResponse[]
+
+  @@index([status, category])
+  @@index([authorId])
+}
+
+model QueryResponse {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  queryId   String
+  authorId  String
+  createdAt DateTime @default(now())
+
+  query     Query    @relation(fields: [queryId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+
+  @@index([queryId, createdAt])
+}
+
+// ==================== TIMETABLE ====================
+
+model Timetable {
+  id          String   @id @default(cuid())
+  name        String
+  branch      String
+  semester    Int
+  year        Int
+  isActive    Boolean  @default(true)
+  fileUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  entries     TimetableEntry[]
+
+  @@unique([branch, semester, year])
+  @@index([branch, semester])
+}
+
+model TimetableEntry {
+  id          String    @id @default(cuid())
+  timetableId String
+  courseId    String
+  dayOfWeek   DayOfWeek
+  startTime   String    // HH:MM format
+  endTime     String
+  room        String?
+  type        String    // lecture, lab, tutorial
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  timetable   Timetable @relation(fields: [timetableId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id])
+
+  @@index([timetableId, dayOfWeek])
+}
+
+// ==================== ACADEMIC RECORDS ====================
+
+model AcademicRecord {
+  id          String   @id @default(cuid())
+  userId      String
+  courseId    String
+  semester    Int
+  year        Int
+  grade       String?
+  gradePoints Float?
+  credits     Int
+  status      String   @default("enrolled") // enrolled, completed, dropped
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId, semester, year])
+  @@index([userId, semester, year])
+}
+
+model CGPARecord {
+  id          String   @id @default(cuid())
+  userId      String
+  semester    Int
+  year        Int
+  sgpa        Float
+  cgpa        Float
+  totalCredits Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([userId, semester, year])
+  @@index([userId])
+}
+
+// ==================== ANNOUNCEMENTS ====================
+
+model Announcement {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @db.Text
+  type        String   // exam, assignment, workshop, seminar, general
+  priority    Int      @default(1)
+  isPublished Boolean  @default(true)
+  publishedAt DateTime @default(now())
+  expiresAt   DateTime?
+  authorId    String
+  groupId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author      User             @relation(fields: [authorId], references: [id])
+  group       DiscussionGroup? @relation(fields: [groupId], references: [id])
+
+  @@index([type, publishedAt])
+  @@index([groupId])
+}
+
+// ==================== NOTIFICATIONS ====================
+
+model Notification {
+  id          String           @id @default(cuid())
+  type        NotificationType
+  title       String
+  message     String
+  link        String?
+  isRead      Boolean          @default(false)
+  userId      String
+  createdAt   DateTime         @default(now())
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+// ==================== COURSE FEEDBACK ====================
+
+model CourseFeedback {
+  id                String   @id @default(cuid())
+  courseId          String
+  userId            String?  // Null for anonymous
+  isAnonymous       Boolean  @default(false)
+  teachingQuality   Int      // 1-5
+  courseDifficulty  Int      // 1-5
+  courseContent     Int      // 1-5
+  suggestions       String?  @db.Text
+  semester          Int
+  year              Int
+  createdAt         DateTime @default(now())
+
+  course            Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  user              User?    @relation(fields: [userId], references: [id])
+
+  @@index([courseId, semester, year])
+}
+
+// ==================== STUDY GROUPS ====================
+
+model StudyGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // subject, exam_prep, project
+  courseId    String?
+  isPublic    Boolean  @default(true)
+  maxMembers  Int      @default(50)
+  createdById String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  course      Course?           @relation(fields: [courseId], references: [id])
+  createdBy   User              @relation(fields: [createdById], references: [id])
+  members     StudyGroupMember[]
+  messages    GroupMessage[]
+
+  @@index([type, isPublic])
+}
+
+model StudyGroupMember {
+  id          String   @id @default(cuid())
+  groupId     String
+  userId      String
+  role        String   @default("member") // admin, moderator, member
+  joinedAt    DateTime @default(now())
+
+  group       StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+model GroupMessage {
+  id          String   @id @default(cuid())
+  content     String   @db.Text
+  groupId     String
+  authorId    String
+  createdAt   DateTime @default(now())
+
+  group       StudyGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  author      User       @relation(fields: [authorId], references: [id])
+
+  @@index([groupId, createdAt])
+}
+
+// ==================== ACADEMIC CALENDAR ====================
+
+model AcademicEvent {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  type        String   // exam, registration, holiday, deadline, event
+  startDate   DateTime
+  endDate     DateTime?
+  isAllDay    Boolean  @default(true)
+  branch      String?  // Null for all branches
+  semester    Int?     // Null for all semesters
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([type, startDate])
+  @@index([branch, semester])
+}
+
+// ==================== ANALYTICS ====================
+
+model AnalyticsEvent {
+  id          String   @id @default(cuid())
+  type        String   // download, view, search, login
+  entityType  String?  // material, pyq, course, etc.
+  entityId    String?
+  userId      String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([entityType, entityId])
+}
