@@ -179,7 +179,7 @@ async function AnnouncementsSection() {
           </p>
         ) : (
           <div className="space-y-4">
-            {announcements.map((announcement: { id: string; title: string; category: string; content: string; author: { name: string }; publishedAt: Date }) => (
+            {announcements.map((announcement) => (
               <div
                 key={announcement.id}
                 className="flex items-start gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"

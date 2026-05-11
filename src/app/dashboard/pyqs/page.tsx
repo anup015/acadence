@@ -83,7 +83,7 @@ async function PYQsList({ params }: { params: SearchParams }) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {pyqs.map((pyq: { id: string; title: string; description: string | null; year: number; semester: number; branch: string; examType: string; fileUrl: string; solutionUrl: string | null; downloadCount: number; createdAt: Date; course: { code: string; name: string }; uploadedBy: { name: string | null } }) => (
+      {pyqs.map((pyq) => (
         <Card key={pyq.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">
@@ -116,7 +116,7 @@ async function PYQsList({ params }: { params: SearchParams }) {
               <span>{formatDate(pyq.createdAt)}</span>
               <span className="flex items-center gap-1">
                 <Download className="h-3 w-3" />
-                {pyq.downloadCount} downloads
+                {pyq.downloads} downloads
               </span>
             </div>
             <div className="flex gap-2">

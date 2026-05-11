@@ -242,7 +242,7 @@ async function SubjectChannels() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {discussions.map((d: { id: string; name: string; description: string | null; memberCount: number; course?: { code: string; name: string } }) => (
+      {discussions.map((d) => (
         <SubjectChannelCard key={d.id} discussion={d} />
       ))}
     </div>

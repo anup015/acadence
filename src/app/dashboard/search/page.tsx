@@ -109,7 +109,7 @@ async function searchAll(query: string, type: string, branch: string) {
             ...(branch !== "all" && { branch }),
           },
           include: {
-            _count: { select: { members: true } },
+            _count: { select: { posts: true } },
           },
           take: 10,
         })
@@ -304,14 +304,14 @@ async function SearchResults({
             <MessageSquare className="h-4 w-4" />
             Discussion Groups ({results.groups.length})
           </h3>
-          {results.groups.map((group: { id: string; name: string; description: string | null; type: string; _count: { members: number } }) => (
+          {results.groups.map((group) => (
             <ResultCard
               key={group.id}
               type="Group"
               icon={Users}
               title={group.name}
               description={group.description || undefined}
-              meta={`${group._count.members} members`}
+              meta={`${group._count.posts} posts`}
               href={`/dashboard/discussions/${group.id}`}
               badge={group.type}
             />

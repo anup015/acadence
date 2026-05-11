@@ -85,7 +85,24 @@ Prisma models cover users, faculty profiles, courses, enrollments, materials, PY
 
 ## Deployment
 
-Set the required environment variables, run `npm run build`, then `npm run start`.
+### Vercel
+
+1. Import the repository into Vercel.
+2. Set the production environment variables in the Vercel project settings.
+3. Use the default Next.js build settings.
+4. Deploy.
+
+Required variables:
+
+- `DATABASE_URL`
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
+- `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` if Google login is enabled
+- `UPLOADTHING_SECRET` / `UPLOADTHING_APP_ID` if uploads are enabled
+- `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` / `AWS_REGION` / `AWS_BUCKET_NAME` if S3 storage is enabled
+- `SUPABASE_URL` / `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` if Supabase storage is enabled
+
+For local verification, run `npm run build` before deploying.
 
 ## License
 

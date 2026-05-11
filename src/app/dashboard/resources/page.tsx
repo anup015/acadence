@@ -98,7 +98,7 @@ async function MaterialsList({ params }: { params: SearchParams }) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {materials.map((material: { id: string; title: string; description: string | null; type: string; tags: string[]; fileUrl: string; fileSize: number | null; downloadCount: number; createdAt: Date; course: { code: string; name: string; branch: string }; uploadedBy: { name: string | null } }) => (
+      {materials.map((material) => (
         <Card key={material.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between gap-2">
@@ -139,7 +139,7 @@ async function MaterialsList({ params }: { params: SearchParams }) {
               <span>{formatDate(material.createdAt)}</span>
               <span className="flex items-center gap-1">
                 <Download className="h-3 w-3" />
-                {material.downloadCount} downloads
+                {material.downloads} downloads
               </span>
             </div>
             <div className="flex gap-2">

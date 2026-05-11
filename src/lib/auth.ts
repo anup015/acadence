@@ -3,10 +3,8 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
+import { Role } from "@prisma/client";
 import prisma from "@/lib/prisma";
-
-// Role type matching Prisma schema - will be replaced by @prisma/client after prisma generate
-type Role = "STUDENT" | "CLASS_REP" | "FACULTY" | "ADMIN";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),

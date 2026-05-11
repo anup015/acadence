@@ -169,7 +169,7 @@ async function QueriesList({
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {queries.map((query: { id: string; ticketId: string; title: string; description: string; category: string; status: string; priority: number; votes: number; createdAt: Date; updatedAt: Date; author?: { name: string | null }; _count?: { responses: number } }) => (
+      {queries.map((query) => (
         <QueryCard key={query.id} query={query} showAuthor={isStaff} />
       ))}
     </div>
