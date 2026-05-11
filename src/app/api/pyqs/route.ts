@@ -106,10 +106,14 @@ export async function POST(request: Request) {
     const pyq = await prisma.pYQ.create({
       data: {
         title: validatedData.title,
+        description: validatedData.description || null,
+        branch: validatedData.branch,
+        semester: validatedData.semester,
         year: validatedData.year,
         examType: validatedData.examType,
         fileUrl: validatedData.fileUrl,
-        solutionUrl: validatedData.solutionUrl || null,
+        fileType: "unknown",
+        fileSize: 0,
         courseId: validatedData.courseId,
         uploadedById: session.user.id,
       },

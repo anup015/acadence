@@ -10,7 +10,7 @@ export interface User {
   branch?: string | null;
   year?: number | null;
   semester?: number | null;
-  rollNo?: string | null;
+  rollNumber?: string | null;
   phone?: string | null;
   bio?: string | null;
   createdAt: Date | string;
@@ -75,7 +75,7 @@ export interface Query {
   title: string;
   description: string;
   category: "COURSE_STRUCTURE" | "EXAM_DIFFICULTY" | "FACULTY_FEEDBACK" | "TIMETABLE_ISSUES" | "ACADEMIC_POLICY" | "OTHER";
-  status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
+  status: "PENDING" | "IN_PROGRESS" | "RESOLVED" | "CLOSED";
   priority: number;
   isAnonymous: boolean;
   votes: number;

@@ -149,7 +149,7 @@ async function AnnouncementsSection() {
     include: { author: { select: { name: true } } },
   });
 
-  const typeColors: Record<string, string> = {
+  const categoryColors: Record<string, string> = {
     exam: "destructive",
     assignment: "warning",
     workshop: "info",
@@ -179,7 +179,7 @@ async function AnnouncementsSection() {
           </p>
         ) : (
           <div className="space-y-4">
-            {announcements.map((announcement: { id: string; title: string; type: string; content: string; author: { name: string }; publishedAt: Date }) => (
+            {announcements.map((announcement: { id: string; title: string; category: string; content: string; author: { name: string }; publishedAt: Date }) => (
               <div
                 key={announcement.id}
                 className="flex items-start gap-4 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
@@ -188,8 +188,8 @@ async function AnnouncementsSection() {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <h4 className="font-medium truncate">{announcement.title}</h4>
-                    <Badge variant={typeColors[announcement.type] as any || "default"}>
-                      {announcement.type}
+                    <Badge variant={categoryColors[announcement.category] as any || "default"}>
+                      {announcement.category}
                     </Badge>
                   </div>
                   <p className="text-sm text-muted-foreground line-clamp-2">

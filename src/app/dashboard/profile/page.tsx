@@ -75,7 +75,7 @@ export default function ProfilePage() {
             bio: data.bio || "",
             branch: data.branch || "",
             semester: data.semester || undefined,
-            rollNo: data.rollNo || "",
+                rollNumber: data.rollNumber || "",
           });
         }
       } catch (error) {
@@ -307,11 +307,11 @@ export default function ProfilePage() {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="rollNo">Roll Number</Label>
+                        <Label htmlFor="rollNumber">Roll Number</Label>
                     <Input
-                      id="rollNo"
+                          id="rollNumber"
                       placeholder="Your roll number"
-                      {...register("rollNo")}
+                          {...register("rollNumber")}
                     />
                   </div>
                   <div className="space-y-2">

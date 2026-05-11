@@ -55,27 +55,36 @@ async function getFaculty(search: string, branch: string) {
   }
 
   if (branch && branch !== "all") {
-    where.courses = {
-      some: { branch },
+    where.facultyProfile = {
+      courses: {
+        some: { branch },
+      },
     };
   }
 
   const faculty = await prisma.user.findMany({
     where,
     include: {
-      courses: {
-        select: {
-          id: true,
-          name: true,
-          code: true,
-          branch: true,
+      facultyProfile: {
+        include: {
+          courses: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+              branch: true,
+            },
+          },
         },
       },
     },
     orderBy: { name: "asc" },
   });
 
-  return faculty;
+  return faculty.map((user) => ({
+    ...user,
+    courses: user.facultyProfile?.courses ?? [],
+  }));
 }
 
 async function getDiscussions() {
@@ -84,18 +93,9 @@ async function getDiscussions() {
       type: "subject",
     },
     include: {
-      course: {
-        select: {
-          id: true,
-          name: true,
-          code: true,
-          branch: true,
-        },
-      },
       _count: {
         select: {
-          members: true,
-          threads: true,
+          posts: true,
         },
       },
     },
@@ -169,26 +169,22 @@ function SubjectChannelCard({ discussion }: { discussion: any }) {
           <div className="space-y-1">
             <CardTitle className="text-lg">{discussion.name}</CardTitle>
             <CardDescription>
-              {discussion.course?.code} - {discussion.course?.name}
+              {discussion.description || "Subject discussion channel"}
             </CardDescription>
           </div>
-          <Badge variant="outline">{discussion.course?.branch}</Badge>
+          <Badge variant="outline">{discussion.branch}</Badge>
         </div>
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground line-clamp-2">
-          {discussion.description || "Subject discussion channel for doubts and discussions"}
+          Year {discussion.year}
         </p>
       </CardContent>
       <CardFooter className="border-t pt-4 flex items-center justify-between">
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <GraduationCap className="h-4 w-4" />
-            {discussion._count.members} members
-          </span>
-          <span className="flex items-center gap-1">
-            <MessageSquare className="h-4 w-4" />
-            {discussion._count.threads} threads
+            {discussion._count.posts} posts
           </span>
         </div>
         <Button size="sm" asChild>

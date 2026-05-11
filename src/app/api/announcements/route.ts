@@ -109,7 +109,7 @@ export async function POST(request: Request) {
       await prisma.notification.createMany({
         data: targetUsers.map((user: { id: string }) => ({
           userId: user.id,
-          type: "announcement",
+          type: "FACULTY_ANNOUNCEMENT",
           title: "New Announcement",
           message: validatedData.title,
           link: `/dashboard/announcements`,

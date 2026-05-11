@@ -30,8 +30,6 @@ import {
   Hash,
   Clock,
   MessageCircle,
-  Lock,
-  Globe,
 } from "lucide-react";
 import { BRANCHES, SEMESTERS, formatRelativeTime, getInitials } from "@/lib/utils";
 import Link from "next/link";
@@ -68,20 +66,8 @@ async function getDiscussionGroups(
   const groups = await prisma.discussionGroup.findMany({
     where,
     include: {
-      course: {
-        select: { name: true, code: true },
-      },
       _count: {
-        select: { members: true, threads: true },
-      },
-      threads: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: {
-          title: true,
-          createdAt: true,
-          author: { select: { name: true } },
-        },
+        select: { posts: true },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -94,25 +80,11 @@ async function getDiscussionGroups(
 async function getMyDiscussions(userId: string) {
   const groups = await prisma.discussionGroup.findMany({
     where: {
-      members: {
-        some: { userId },
-      },
+      isActive: true,
     },
     include: {
-      course: {
-        select: { name: true, code: true },
-      },
       _count: {
-        select: { members: true, threads: true },
-      },
-      threads: {
-        orderBy: { createdAt: "desc" },
-        take: 1,
-        select: {
-          title: true,
-          createdAt: true,
-          author: { select: { name: true } },
-        },
+        select: { posts: true },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -142,8 +114,6 @@ function DiscussionGroupCard({
   group: any;
   isMember?: boolean;
 }) {
-  const lastThread = group.threads[0];
-
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
@@ -157,16 +127,9 @@ function DiscussionGroupCard({
             <div className="space-y-1">
               <CardTitle className="text-lg flex items-center gap-2">
                 {group.name}
-                {group.isPrivate ? (
-                  <Lock className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                )}
               </CardTitle>
               <CardDescription>
-                {group.course
-                  ? `${group.course.code} - ${group.course.name}`
-                  : group.description?.substring(0, 50) || "Discussion group"}
+                {group.description?.substring(0, 50) || "Discussion group"}
               </CardDescription>
             </div>
           </div>
@@ -186,25 +149,10 @@ function DiscussionGroupCard({
         {/* Stats */}
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
-            <Users className="h-4 w-4" />
-            {group._count.members} members
-          </span>
-          <span className="flex items-center gap-1">
             <MessageCircle className="h-4 w-4" />
-            {group._count.threads} threads
+            {group._count.posts} posts
           </span>
         </div>
-
-        {/* Latest Thread */}
-        {lastThread && (
-          <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm font-medium truncate">{lastThread.title}</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              by {lastThread.author.name} •{" "}
-              {formatRelativeTime(lastThread.createdAt)}
-            </p>
-          </div>
-        )}
       </CardContent>
       <CardFooter className="border-t pt-4">
         {isMember ? (
@@ -260,7 +208,7 @@ async function AllGroupsList({
     );
   }
 
-  type GroupData = { id: string; name: string; description: string | null; type: string; branch: string | null; memberCount: number; _count?: { posts: number } };
+  type GroupData = { id: string; name: string; description: string | null; type: string; branch: string | null; year: number | null; _count: { posts: number } };
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -294,7 +242,7 @@ async function MyGroupsList({ userId }: { userId: string }) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {groups.map((group: { id: string; name: string; description: string | null; type: string; branch: string | null; memberCount: number; _count?: { posts: number } }) => (
+      {groups.map((group: { id: string; name: string; description: string | null; type: string; branch: string | null; year: number | null; _count: { posts: number } }) => (
         <DiscussionGroupCard key={group.id} group={group} isMember />
       ))}
     </div>

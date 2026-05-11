@@ -45,13 +45,6 @@ export async function GET(request: Request) {
             role: true,
           },
         },
-        assignedTo: {
-          select: {
-            id: true,
-            name: true,
-            image: true,
-          },
-        },
         _count: {
           select: {
             responses: true,
@@ -89,7 +82,8 @@ export async function POST(request: Request) {
         category: validatedData.category,
         isAnonymous: validatedData.isAnonymous || false,
         authorId: session.user.id,
-        status: "OPEN",
+        status: "PENDING",
+        priority: validatedData.priority,
       },
       include: {
         author: {
@@ -115,7 +109,7 @@ export async function POST(request: Request) {
       await prisma.notification.createMany({
         data: admins.map((admin: { id: string }) => ({
           userId: admin.id,
-          type: "query_submitted",
+          type: "GENERAL",
           title: "New Query Submitted",
           message: `A new query "${validatedData.title}" has been submitted`,
           link: `/dashboard/queries/${query.id}`,

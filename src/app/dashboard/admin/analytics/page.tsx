@@ -77,7 +77,7 @@ async function getAnalytics() {
   // Get most downloaded materials
   const topMaterials = await prisma.studyMaterial.findMany({
     where: { status: "APPROVED" },
-    orderBy: { downloadCount: "desc" },
+    orderBy: { downloads: "desc" },
     take: 10,
     include: {
       course: { select: { name: true, code: true, branch: true } },
@@ -154,7 +154,7 @@ async function AnalyticsDashboard() {
   };
 
   const statusColors: Record<string, string> = {
-    OPEN: "bg-yellow-500",
+    PENDING: "bg-yellow-500",
     IN_PROGRESS: "bg-blue-500",
     RESOLVED: "bg-green-500",
     CLOSED: "bg-gray-500",
@@ -280,7 +280,7 @@ async function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {analytics.topMaterials.map((material: { id: string; title: string; downloadCount: number; course: { code: string; branch: string } }, index: number) => (
+              {analytics.topMaterials.map((material: { id: string; title: string; downloads: number; course: { code: string; branch: string } }, index: number) => (
                 <div
                   key={material.id}
                   className="flex items-center gap-4"
@@ -295,7 +295,7 @@ async function AnalyticsDashboard() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{material.downloadCount}</p>
+                    <p className="font-medium">{material.downloads}</p>
                     <p className="text-xs text-muted-foreground">downloads</p>
                   </div>
                 </div>

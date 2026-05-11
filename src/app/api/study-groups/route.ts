@@ -86,6 +86,7 @@ export async function POST(request: Request) {
         meetingSchedule: validatedData.meetingSchedule || null,
         goals: validatedData.goals || [],
         leaderId: session.user.id,
+        createdById: session.user.id,
         courseId: validatedData.courseId || null,
         isActive: true,
       },

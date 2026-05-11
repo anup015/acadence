@@ -32,7 +32,7 @@ export const updateProfileSchema = z.object({
   branch: z.string().optional(),
   year: z.coerce.number().min(1).max(4).optional(),
   semester: z.coerce.number().min(1).max(8).optional(),
-  rollNo: z.string().optional(),
+  rollNumber: z.string().optional(),
 });
 
 // Alias for profileSchema

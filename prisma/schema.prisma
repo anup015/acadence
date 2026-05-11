@@ -91,7 +91,8 @@ model User {
   discussionComments DiscussionComment[]
   feedbacks       CourseFeedback[]
   studyGroupMemberships StudyGroupMember[]
-  createdStudyGroups StudyGroup[]
+  createdStudyGroups StudyGroup[] @relation("StudyGroupCreator")
+  ledStudyGroups     StudyGroup[] @relation("StudyGroupLeader")
   facultyProfile  FacultyProfile?
   academicRecords AcademicRecord[]
   materialDownloads MaterialDownload[]
@@ -269,6 +270,7 @@ model DiscussionGroup {
   id          String   @id @default(cuid())
   name        String
   description String?
+  type        String   @default("general") // branch, year, subject, general
   branch      String
   year        Int
   isActive    Boolean  @default(true)
@@ -372,6 +374,7 @@ model Query {
   category    QueryCategory
   status      QueryStatus   @default(PENDING)
   priority    Int           @default(1) // 1-5
+  isAnonymous Boolean       @default(false)
   authorId    String
   assignedToId String?
   createdAt   DateTime      @default(now())
@@ -478,7 +481,10 @@ model Announcement {
   id          String   @id @default(cuid())
   title       String
   content     String   @db.Text
-  type        String   // exam, assignment, workshop, seminar, general
+  category    String   // exam, assignment, workshop, seminar, event, general
+  targetBranch String?
+  attachmentUrl String?
+  isPinned    Boolean  @default(false)
   priority    Int      @default(1)
   isPublished Boolean  @default(true)
   publishedAt DateTime @default(now())
@@ -491,7 +497,7 @@ model Announcement {
   author      User             @relation(fields: [authorId], references: [id])
   group       DiscussionGroup? @relation(fields: [groupId], references: [id])
 
-  @@index([type, publishedAt])
+  @@index([category, publishedAt])
   @@index([groupId])
 }
 
@@ -539,20 +545,27 @@ model StudyGroup {
   id          String   @id @default(cuid())
   name        String
   description String?
+  subject     String
   type        String   // subject, exam_prep, project
   courseId    String?
   isPublic    Boolean  @default(true)
+  isActive    Boolean  @default(true)
   maxMembers  Int      @default(50)
+  meetingSchedule String?
+  goals       String[]
+  leaderId    String
   createdById String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   course      Course?           @relation(fields: [courseId], references: [id])
-  createdBy   User              @relation(fields: [createdById], references: [id])
+  leader      User              @relation("StudyGroupLeader", fields: [leaderId], references: [id])
+  createdBy   User              @relation("StudyGroupCreator", fields: [createdById], references: [id])
   members     StudyGroupMember[]
   messages    GroupMessage[]
 
   @@index([type, isPublic])
+  @@index([subject])
 }
 
 model StudyGroupMember {
