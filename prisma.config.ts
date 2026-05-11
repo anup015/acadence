@@ -8,4 +8,5 @@ export default defineConfig({
   migrations: {
     path: "prisma/migrations",
   },
+  // The datasource property has been removed to match the installed Prisma type definitions.
 });
