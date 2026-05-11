@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import {
   LayoutDashboard,
@@ -121,8 +121,15 @@ const adminNavItems = [
 
 export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { data: session } = useSession();
   const userRole = session?.user?.role || "STUDENT";
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false, callbackUrl: "/auth/login" });
+    router.push("/auth/login");
+    router.refresh();
+  };
 
   const filteredMainNav = mainNavItems.filter((item) =>
     item.roles.includes(userRole)
@@ -272,7 +279,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8"
-                    onClick={() => signOut({ callbackUrl: "/auth/login" })}
+                    onClick={handleSignOut}
                   >
                     <LogOut className="h-4 w-4" />
                   </Button>
@@ -301,7 +308,7 @@ export function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => signOut({ callbackUrl: "/auth/login" })}
+                onClick={handleSignOut}
               >
                 <LogOut className="h-4 w-4" />
               </Button>
