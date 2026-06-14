@@ -57,8 +57,9 @@ export const studyMaterialSchema = z.object({
   type: z.enum(["lecture_notes", "tutorial", "assignment", "reference"]),
   tags: z.array(z.string()).optional(),
   courseId: z.string().min(1, "Course is required"),
-  fileUrl: z.string().url("Valid URL required"),
+  fileUrl: z.string().min(1, "File URL or path is required"),
   fileSize: z.number().optional(),
+  fileType: z.string().optional(),
 });
 
 // Alias for materialSchema
@@ -74,7 +75,7 @@ export const pyqSchema = z.object({
   year: z.coerce.number().min(2015).max(2030),
   examType: z.enum(["mid-sem", "end-sem", "quiz", "assignment"]),
   courseId: z.string().min(1, "Course is required"),
-  fileUrl: z.string().url("Valid URL required"),
+  fileUrl: z.string().min(1, "File URL or path is required"),
   solutionUrl: z.string().url().optional(),
 });
 

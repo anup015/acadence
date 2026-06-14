@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { BRANCHES, SEMESTERS, EXAM_TYPES } from "@/lib/utils";
 
 type Course = {
   id: string;
@@ -19,11 +20,11 @@ type Course = {
   semester: number;
 };
 
-type UploadMaterialFormProps = {
+type PYQUploadFormProps = {
   courses: Course[];
 };
 
-export default function UploadMaterialForm({ courses }: UploadMaterialFormProps) {
+export default function PYQUploadForm({ courses }: PYQUploadFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,12 +34,12 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState("lecture_notes");
-  const [fileFormat, setFileFormat] = useState("pdf");
-  const [tags, setTags] = useState("");
+  const [branch, setBranch] = useState<string>(BRANCHES[0]);
+  const [semester, setSemester] = useState<number>(SEMESTERS[0]);
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [examType, setExamType] = useState<string>(EXAM_TYPES[0].value);
   const [courseId, setCourseId] = useState(courses[0]?.id ?? "");
   const [fileUrl, setFileUrl] = useState("");
-  const [fileSize, setFileSize] = useState<string>("");
 
   const isValid = useMemo(() => {
     if (uploadMode === "file") {
@@ -52,7 +53,7 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
     setError(null);
 
     if (uploadMode === "url" && !isValid) {
-      setError("Please fill title, file URL, and course.");
+      setError("Please fill in title, course, and file URL.");
       return;
     }
     if (uploadMode === "file" && !selectedFile) {
@@ -62,8 +63,6 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
 
     setIsSubmitting(true);
     let finalFileUrl = fileUrl;
-    let finalFileSize = fileSize.trim() ? Number(fileSize) : 0;
-    let finalFileFormat = fileFormat;
 
     try {
       if (uploadMode === "file" && selectedFile) {
@@ -82,16 +81,9 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
 
         const uploadData = await uploadResponse.json();
         finalFileUrl = uploadData.fileUrl;
-        finalFileSize = uploadData.fileSize;
-        
-        // Match format based on extension
-        const ext = selectedFile.name.split(".").pop()?.toLowerCase();
-        if (ext && ["pdf", "docx", "png", "jpg", "mp4"].includes(ext)) {
-          finalFileFormat = ext;
-        }
       }
 
-      const response = await fetch("/api/materials", {
+      const response = await fetch("/api/pyqs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -99,28 +91,25 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim() || undefined,
-          type,
-          fileType: finalFileFormat,
-          tags: tags
-            .split(",")
-            .map((item) => item.trim())
-            .filter(Boolean),
+          branch,
+          semester: Number(semester),
+          year: Number(year),
+          examType,
           courseId,
           fileUrl: finalFileUrl.trim(),
-          fileSize: finalFileSize,
         }),
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        setError(data?.message || "Failed to upload material.");
+        setError(data?.message || "Failed to upload PYQ.");
         return;
       }
 
-      router.push("/dashboard/resources");
+      router.push("/dashboard/pyqs");
       router.refresh();
     } catch (err: any) {
-      setError(err.message || "Failed to upload material. Please try again.");
+      setError(err.message || "Failed to upload PYQ. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -130,28 +119,28 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Upload Material</h1>
-          <p className="text-muted-foreground">Add a new study resource for students.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-dark-text">Upload PYQ Paper</h1>
+          <p className="text-muted-foreground">Add a past year question paper for batch reference.</p>
         </div>
         <Button variant="outline" asChild>
-          <Link href="/dashboard/resources">
+          <Link href="/dashboard/pyqs">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Resources
+            Back to PYQs
           </Link>
         </Button>
       </div>
 
-      <Card>
+      <Card className="bg-white border-paper-border border">
         <CardHeader>
-          <CardTitle>Material Details</CardTitle>
+          <CardTitle className="text-xl font-bold text-dark-text">Paper Details</CardTitle>
           <CardDescription>
-            Upload a local file or provide an accessible URL. Faculty and admins publish directly.
+            Provide exam metadata, semester targets, and upload the question paper document.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Upload Option</Label>
+              <Label className="font-semibold text-xs text-dark-text/85 uppercase tracking-wider">Upload Option</Label>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -159,7 +148,7 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
                   onClick={() => setUploadMode("file")}
                   className="flex-1"
                 >
-                  Local File (Document/Image/Video)
+                  Local Document File (PDF preferred)
                 </Button>
                 <Button
                   type="button"
@@ -167,14 +156,14 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
                   onClick={() => setUploadMode("url")}
                   className="flex-1"
                 >
-                  Remote URL Link
+                  Remote Document URL Link
                 </Button>
               </div>
             </div>
 
             {uploadMode === "file" ? (
               <div className="space-y-2">
-                <Label htmlFor="fileInput">Select Document, Image, or Video File</Label>
+                <Label htmlFor="fileInput">Choose Paper File</Label>
                 <div className="flex items-center justify-center w-full">
                   <label
                     htmlFor="fileInput"
@@ -182,35 +171,27 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
                   >
                     <div className="flex flex-col items-center justify-center pt-5 pb-6">
                       <Upload className="w-8 h-8 mb-3 text-campus-green" />
-                      <p className="mb-2 text-sm text-dark-text/80 font-semibold">
-                        Click to select file
+                      <p className="mb-2 text-sm text-dark-text/85 font-semibold">
+                        Click to select question paper
                       </p>
                       <p className="text-xs text-dark-text/60">
-                        PDF, DOCX, PNG, JPG, MP4, etc.
+                        PDF, DOCX, DOC files
                       </p>
                     </div>
                     <input
                       id="fileInput"
                       type="file"
                       className="hidden"
+                      accept=".pdf,.docx,.doc"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
                         if (file) {
                           setSelectedFile(file);
-                          setFileSize(file.size.toString());
                           if (!title) {
                             const cleanTitle = file.name
                               .substring(0, file.name.lastIndexOf("."))
                               .replace(/[_\-]+/g, " ");
                             setTitle(cleanTitle);
-                          }
-                          const ext = file.name.split(".").pop()?.toLowerCase();
-                          if (ext && ["pdf", "docx", "png", "jpg", "mp4"].includes(ext)) {
-                            setFileFormat(ext);
-                          } else if (file.type.startsWith("image/")) {
-                            setFileFormat("png");
-                          } else if (file.type.startsWith("video/")) {
-                            setFileFormat("mp4");
                           }
                         }
                       }}
@@ -231,70 +212,39 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
                   type="url"
                   value={fileUrl}
                   onChange={(e) => setFileUrl(e.target.value)}
-                  placeholder="https://example.com/your-file.pdf"
+                  placeholder="https://example.com/question-paper.pdf"
                   required
                 />
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
+              <Label htmlFor="title">Paper Title</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Operating Systems Unit 3 Notes"
+                placeholder="Computer Networks End-Semester 2024 Exam"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Description (optional)</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief overview of the content"
+                placeholder="Include details about syllabus, marks weightage or instructors"
               />
             </div>
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="type">Type</Label>
-                <select
-                  id="type"
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                >
-                  <option value="lecture_notes">Lecture Notes</option>
-                  <option value="tutorial">Tutorial</option>
-                  <option value="assignment">Assignment</option>
-                  <option value="reference">Reference</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fileFormat">File Format</Label>
-                <select
-                  id="fileFormat"
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-dark-text bg-white"
-                  value={fileFormat}
-                  onChange={(e) => setFileFormat(e.target.value)}
-                >
-                  <option value="pdf">Document (PDF)</option>
-                  <option value="docx">Document (Word/Docx)</option>
-                  <option value="png">Image (PNG)</option>
-                  <option value="jpg">Image (JPG)</option>
-                  <option value="mp4">Video (MP4)</option>
-                </select>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="course">Course</Label>
                 <select
                   id="course"
-                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-dark-text"
                   value={courseId}
                   onChange={(e) => setCourseId(e.target.value)}
                   required
@@ -304,35 +254,74 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
                   ) : (
                     courses.map((course) => (
                       <option key={course.id} value={course.id}>
-                        {course.code} - {course.name} ({course.branch} S{course.semester})
+                        {course.code} - {course.name}
                       </option>
                     ))
                   )}
                 </select>
               </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="examType">Exam Type</Label>
+                <select
+                  id="examType"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-dark-text"
+                  value={examType}
+                  onChange={(e) => setExamType(e.target.value)}
+                >
+                  {EXAM_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="year">Exam Year</Label>
+                <Input
+                  id="year"
+                  type="number"
+                  min={2015}
+                  max={2030}
+                  value={year}
+                  onChange={(e) => setYear(Number(e.target.value))}
+                  required
+                />
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="fileSize">File Size (bytes, optional)</Label>
-                <Input
-                  id="fileSize"
-                  type="number"
-                  min={0}
-                  value={fileSize}
-                  onChange={(e) => setFileSize(e.target.value)}
-                  placeholder="1024000"
-                />
+                <Label htmlFor="branch">Branch</Label>
+                <select
+                  id="branch"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-dark-text"
+                  value={branch}
+                  onChange={(e) => setBranch(e.target.value)}
+                >
+                  {BRANCHES.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tags">Tags (comma separated)</Label>
-                <Input
-                  id="tags"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="unit-3, exam, cse"
-                />
+                <Label htmlFor="semester">Semester</Label>
+                <select
+                  id="semester"
+                  className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-dark-text"
+                  value={semester}
+                  onChange={(e) => setSemester(Number(e.target.value))}
+                >
+                  {SEMESTERS.map((sem) => (
+                    <option key={sem} value={sem}>
+                      Semester {sem}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -342,12 +331,12 @@ export default function UploadMaterialForm({ courses }: UploadMaterialFormProps)
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Uploading...
+                  Uploading Paper...
                 </>
               ) : (
                 <>
                   <Upload className="h-4 w-4 mr-2" />
-                  Upload Material
+                  Upload PYQ
                 </>
               )}
             </Button>

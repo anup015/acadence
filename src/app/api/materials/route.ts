@@ -113,7 +113,7 @@ export async function POST(request: Request) {
         description: validatedData.description || null,
         type: validatedData.type,
         fileUrl: validatedData.fileUrl,
-        fileType: "unknown",
+        fileType: validatedData.fileType ?? "unknown",
         fileSize: validatedData.fileSize ?? 0,
         tags: validatedData.tags ?? [],
         courseId: validatedData.courseId,

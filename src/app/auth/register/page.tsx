@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, GraduationCap } from "lucide-react";
+import { Loader2, GraduationCap, ArrowLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +41,7 @@ export default function RegisterPage() {
     watch,
     formState: { errors },
   } = useForm<RegisterInput>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(registerSchema) as any,
     defaultValues: {
       role: "STUDENT",
@@ -71,11 +72,12 @@ export default function RegisterPage() {
       });
 
       router.push("/auth/login");
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as { message?: string };
       toast({
         variant: "destructive",
         title: "Registration failed",
-        description: error.message || "Something went wrong. Please try again.",
+        description: err.message || "Something went wrong. Please try again.",
       });
     } finally {
       setIsLoading(false);
@@ -83,27 +85,42 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
-      <Card className="w-full max-w-lg">
-        <CardHeader className="space-y-1 text-center">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary rounded-full">
-              <GraduationCap className="h-8 w-8 text-primary-foreground" />
+    <div className="min-h-screen relative flex items-center justify-center bg-warm-cream p-4 overflow-hidden selection:bg-parchment-gold/40">
+      {/* Background patterns */}
+      <div className="absolute inset-0 bg-dot-grid pointer-events-none" />
+      <div className="absolute inset-0 bg-noise-overlay opacity-[0.015] pointer-events-none mix-blend-overlay" />
+
+      <Card className="w-full max-w-lg relative bg-white border border-paper-border shadow-xl rounded-2xl z-10 p-2">
+        <div className="absolute inset-0 -z-10 translate-x-1.5 translate-y-1.5 rounded-2xl border border-paper-border bg-white/60 shadow-lg" />
+
+        <CardHeader className="space-y-2 text-center pb-4">
+          <div className="flex justify-between items-center px-2">
+            <Link href="/" className="flex items-center gap-1 text-xs font-semibold text-campus-green hover:underline">
+              <ArrowLeft className="h-3 w-3" /> Back
+            </Link>
+            <span className="text-[10px] font-bold tracking-widest text-campus-green uppercase">Onboarding</span>
+          </div>
+
+          <div className="flex justify-center pt-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-campus-green text-warm-cream shadow-sm">
+              <GraduationCap className="h-7 w-7" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
-          <CardDescription>
-            Join AcadConnect to access academic resources
+          <CardTitle className="text-2xl font-display font-extrabold text-dark-text tracking-tight">Create an Account</CardTitle>
+          <CardDescription className="text-dark-text/60">
+            Join AcadConnect to centralize and track your courses
           </CardDescription>
         </CardHeader>
+        
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name" className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Full Name</Label>
                 <Input
                   id="name"
                   placeholder="John Doe"
+                  className="text-dark-text bg-white border-paper-border focus:ring-campus-green focus:border-campus-green rounded-lg"
                   {...register("name")}
                   disabled={isLoading}
                 />
@@ -112,11 +129,12 @@ export default function RegisterPage() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Email</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="john@college.edu"
+                  className="text-dark-text bg-white border-paper-border focus:ring-campus-green focus:border-campus-green rounded-lg"
                   {...register("email")}
                   disabled={isLoading}
                 />
@@ -127,15 +145,15 @@ export default function RegisterPage() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="role">Role</Label>
+              <Label htmlFor="role" className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Select Role</Label>
               <Select
-                onValueChange={(value: any) => setValue("role", value)}
+                onValueChange={(value) => setValue("role", value as "STUDENT" | "FACULTY" | "ACADEMIC_REP")}
                 defaultValue="STUDENT"
               >
-                <SelectTrigger>
+                <SelectTrigger className="border-paper-border focus:ring-campus-green focus:border-campus-green rounded-lg bg-white">
                   <SelectValue placeholder="Select your role" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white">
                   <SelectItem value="STUDENT">Student</SelectItem>
                   <SelectItem value="FACULTY">Faculty</SelectItem>
                   <SelectItem value="ACADEMIC_REP">Academic Representative</SelectItem>
@@ -150,10 +168,11 @@ export default function RegisterPage() {
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="rollNumber">Roll Number</Label>
+                    <Label htmlFor="rollNumber" className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Roll Number</Label>
                     <Input
                       id="rollNumber"
                       placeholder="21CSE001"
+                      className="text-dark-text bg-white border-paper-border focus:ring-campus-green focus:border-campus-green rounded-lg animate-fade-up"
                       {...register("rollNumber")}
                       disabled={isLoading}
                     />
@@ -164,12 +183,12 @@ export default function RegisterPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="branch">Branch</Label>
+                    <Label htmlFor="branch" className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Branch</Label>
                     <Select onValueChange={(value) => setValue("branch", value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className="border-paper-border focus:ring-campus-green focus:border-campus-green rounded-lg bg-white">
                         <SelectValue placeholder="Select branch" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         {BRANCHES.map((branch) => (
                           <SelectItem key={branch} value={branch}>
                             {branch}
@@ -187,14 +206,14 @@ export default function RegisterPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="year">Year</Label>
+                    <Label htmlFor="year" className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Academic Year</Label>
                     <Select
                       onValueChange={(value) => setValue("year", parseInt(value))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="border-paper-border focus:ring-campus-green focus:border-campus-green rounded-lg bg-white">
                         <SelectValue placeholder="Select year" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         {YEARS.map((year) => (
                           <SelectItem key={year} value={year.toString()}>
                             {year}
@@ -215,14 +234,14 @@ export default function RegisterPage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="semester">Semester</Label>
+                    <Label htmlFor="semester" className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Current Semester</Label>
                     <Select
                       onValueChange={(value) => setValue("semester", parseInt(value))}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="border-paper-border focus:ring-campus-green focus:border-campus-green rounded-lg bg-white">
                         <SelectValue placeholder="Select semester" />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="bg-white">
                         {SEMESTERS.map((sem) => (
                           <SelectItem key={sem} value={sem.toString()}>
                             Semester {sem}
@@ -242,11 +261,12 @@ export default function RegisterPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Password</Label>
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
+                  className="text-dark-text bg-white border-paper-border focus:ring-campus-green focus:border-campus-green rounded-lg"
                   {...register("password")}
                   disabled={isLoading}
                 />
@@ -257,11 +277,12 @@ export default function RegisterPage() {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="font-semibold text-xs text-dark-text/80 uppercase tracking-wider">Confirm Password</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
+                  className="text-dark-text bg-white border-paper-border focus:ring-campus-green focus:border-campus-green rounded-lg"
                   {...register("confirmPassword")}
                   disabled={isLoading}
                 />
@@ -273,16 +294,18 @@ export default function RegisterPage() {
               </div>
             </div>
           </CardContent>
+          
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full bg-campus-green hover:bg-campus-green/90 text-warm-cream font-semibold rounded-lg shadow-sm" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Create Account
             </Button>
-            <p className="text-center text-sm text-muted-foreground">
+            
+            <p className="text-center text-sm text-dark-text/60">
               Already have an account?{" "}
               <Link
                 href="/auth/login"
-                className="font-medium text-primary hover:underline"
+                className="font-bold text-campus-green hover:underline"
               >
                 Sign in
               </Link>

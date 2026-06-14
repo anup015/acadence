@@ -92,7 +92,7 @@ const mainNavItems = [
   },
   {
     title: "Discussion",
-    href: "/dashboard/discussion",
+    href: "/dashboard/discussions",
     icon: MessageSquare,
     roles: ["STUDENT", "FACULTY", "ACADEMIC_REP", "ADMIN"],
   },
@@ -107,7 +107,7 @@ const mainNavItems = [
 const adminNavItems = [
   {
     title: "Analytics",
-    href: "/dashboard/analytics",
+    href: "/dashboard/admin/analytics",
     icon: BarChart3,
     roles: ["ADMIN", "ACADEMIC_REP"],
   },
